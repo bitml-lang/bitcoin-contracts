@@ -1,9 +1,5 @@
-import requests
-
-urlPutCode = 'http://localhost:8080/balzac/xtext-service/update?resource=9b8085f.balzac'
-urlGetResult = 'http://localhost:8080/balzac/xtext-service/generate?resource=9b8085f.balzac&requiredStateId=-80000000'
-code = {'fullText': '''/*
- * Oracle
+/*
+ * Oracle (timed version)
  *
  * https://blockchain.unica.it/balzac/docs/oracle.html
  */
@@ -19,10 +15,21 @@ participant Alice {
     private const kA = key:cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDSy59L4
     // Alice's public key
     const kApub = kA.toPubkey
+    // deadline
+    const deadline = 2018-12-31
 
     transaction T {
         input = A_funds: sig(kA)
-        output = 1 BTC: fun(sigB, sigO). versig(Bob.kBpub, Oracle.kOpub; sigB, sigO)
+        output = 1 BTC: fun(sigma, sigO).
+                versig(Bob.kBpub, Oracle.kOpub; sigma, sigO)
+                || checkDate deadline : versig(kApub;sigma)
+    }
+
+    // Alice takes back her deposit after the deadline
+    transaction T1 {
+        input = T: sig(kA) _
+        output = 1 BTC: fun(sigA). versig(kApub;sigA)
+        absLock = date deadline
     }
 }
 
@@ -32,8 +39,8 @@ participant Bob {
     // Bob's public key
     const kBpub = kB.toPubkey
 
-    transaction T1(sigO) {
-        input = Alice.T: sig(kB) sigO
+    transaction T1(sigOtimed) {
+        input = Alice.T: sig(kB) sigOtimed
         output = 1 BTC: fun(x). versig(kB; x)
     }
 }
@@ -48,12 +55,5 @@ participant Oracle {
 }
 
 
-eval Alice.T, Bob.T1(Oracle.sigO)
- '''}
-cook = requests.Session()
-cook.put(urlPutCode, data=code)
-response = cook.get(urlGetResult)
-
-print(response.content)
-
+eval Alice.T, Alice.T1, Bob.T1(Oracle.sigO)
 
