@@ -5,7 +5,7 @@ import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
-import fr.acinq.bitcoin.{Base58, Btc, ByteVector32, OP_0, OutPoint, Satoshi, Script, ScriptElt, ScriptFlags, Transaction, TxIn, TxOut}
+import fr.acinq.bitcoin.{Base58, Base58Check, Btc, ByteVector32, Crypto, OP_0, OP_PUSHDATA, OutPoint, Satoshi, Script, ScriptElt, ScriptFlags, Transaction, TxIn, TxOut}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
 import scodec.bits.ByteVector
@@ -39,6 +39,9 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
     val bob_addr = "bcrt1q6hhz23me8gqumprwzdrm4yrcy9yntp7l53nzt6"
     val oracle_addr = "bcrt1qp2g8a0ele0ywv9tc9ywutv58j0prhqznxvltn0"
     val privA = "cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS"
+    val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
+    //03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a
+    val a_pub = a_priv.publicKey
     val privB = "cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ"
     val privO = "cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH"
     val rpc = new BitcoinJSONRPCClient()
@@ -46,22 +49,16 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
     println(rpc.getReceivedByAddress("bcrt1qpvya0fx4a3rny37jt8twqe4kt95qwcvagvn7ed"))
     println(rpc.getReceivedByAddress("bcrt1q6hhz23me8gqumprwzdrm4yrcy9yntp7l53nzt6"))
     println(rpc.getReceivedByAddress("bcrt1qp2g8a0ele0ywv9tc9ywutv58j0prhqznxvltn0"))
-    //tx id = 9507a19dbf0e53787480779df2a123192485e69aeef7fc46f6d557c04e4829ec
-    //tx id hash = ec29484ec057d5f646fcf7ee9ae685241923a1f29d77807478530ebf9da10795
-    //d0817628c3b16e45e638de38b39a509f090f1ab205e18c7f666135214f91859a
-    //9a85914f213561667f8ce105b21a0f099f509ab338de38e6456eb1c3287681d0
+   //id = 0859d605b30cfd3e5a989f91bcd3891be8994875da46520cd479bcfa8bcc1caf
+    //id hash = af1ccc8bfabc79d40c5246da754899e81b89d3bc919f985a3efd0cb305d65908
+    val t3 = Transaction.read("0200000001af1ccc8bfabc79d40c5246da754899e81b89d3bc919f985a3efd0cb305d65908010000006a47304402202c2cd9f76ba0fb98f6e5d43519843de088861b920581f51eb670d7dd7dbcab4502200a2287d327851df954f5563e88c73084e5def74ab991a4793ad045c39f8ca69c012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100f2052a010000001976a9140b09d7a4d5ec473247d259d6e066b6596807619d88ac00000000")
+    val t0 = Transaction.read("020000000176e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e0801010000006b483045022100b77139c8a1a0ed1c27a7018ab045dbabf7c1935d137ff76b47b60b83b0ea2b6c0220756b08797597cca0a9b316d094a5e07c82c258138777b80d49e069f4f556790e012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000")
+    //val t = Transaction.read("020000000176e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e08010100000002012affffffff0100f2052a0100000017a91453c3f130b2e0f8d9a3a5b6aaf71804543076d4568700000000")
+     rpc.sendRawTransaction("0200000001af1ccc8bfabc79d40c5246da754899e81b89d3bc919f985a3efd0cb305d65908010000006a47304402202c2cd9f76ba0fb98f6e5d43519843de088861b920581f51eb670d7dd7dbcab4502200a2287d327851df954f5563e88c73084e5def74ab991a4793ad045c39f8ca69c012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100f2052a010000001976a9140b09d7a4d5ec473247d259d6e066b6596807619d88ac00000000")
 
-    val t = Transaction.read("020000000106bef082338220da8bf782f5ab60a1e4fa645a0dc80ca5c5c0001c4f85a21879000000006b483045022100adeba2f2637bf86d6084175bb41de8352147521fd13d40463afb701e883a6482022070f2b6dcfd3f6d36371139f0a0f56f70cd7781c18798315139129f8bdf60a04b0121032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32effffffff0100e1f5050000000017a914f63274315fd47e310c42022791cd51e35a550a248700000000")
-    val tx1 = Transaction(
-      version = 2L,
-      txIn = List(
-        TxIn(OutPoint(ByteVector32.fromValidHex("9a85914f213561667f8ce105b21a0f099f509ab338de38e6456eb1c3287681d0"), 1), signatureScript = t.txIn(0).signatureScript, sequence = 0xFFFFFFFFL)
-      ),
-      txOut = t.txOut,
-      lockTime = 0L
-    )
-    println(tx1.txIn(0).outPoint)
-    rpc.sendRawTransaction(tx1.toString())
+                                  //tx hash = 76e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e0801
+    //0200000001f4e4750d732198c4033b40292ecb57d4ed65ae0f0b8d80d365e5eddbabb327810100000000ffffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000
+    val t4 = Transaction.read("020000000176e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e0801010000006b483045022100b77139c8a1a0ed1c27a7018ab045dbabf7c1935d137ff76b47b60b83b0ea2b6c0220756b08797597cca0a9b316d094a5e07c82c258138777b80d49e069f4f556790e012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000")
   }
 
   test("Signature exchange and transaction assembly based on Balzac.Oracle"){
@@ -472,10 +469,10 @@ eval Alice.T, Alice.T1, Bob.T1(Oracle.sigO)
     //val privA = "cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS"
     //val privB = "cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ"
     //val privO = "cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH"
-    //tx id = 8127b3abdbede565d3808d0b0fae65edd457cb2e29403b03c49821730d75e4f4
-    //tx hash = f4e4750d732198c4033b40292ecb57d4ed65ae0f0b8d80d365e5eddbabb32781
+    //tx id = 01089e1470ecb4c9aff5b9c1e35a8b5e9c5c089e6ddbcc73017c73feda0ce876
+    //tx hash = 76e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e0801
     //0200000001f4e4750d732198c4033b40292ecb57d4ed65ae0f0b8d80d365e5eddbabb327810100000000ffffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000
-    val t = Transaction.read("0200000001f4e4750d732198c4033b40292ecb57d4ed65ae0f0b8d80d365e5eddbabb32781010000006b483045022100b77139c8a1a0ed1c27a7018ab045dbabf7c1935d137ff76b47b60b83b0ea2b6c0220756b08797597cca0a9b316d094a5e07c82c258138777b80d49e069f4f556790e012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000")
+    val t = Transaction.read("020000000176e80cdafe737c0173ccdb6d9e085c9c5e8b5ae3c1b9f5afc9b4ec70149e0801010000006b483045022100b77139c8a1a0ed1c27a7018ab045dbabf7c1935d137ff76b47b60b83b0ea2b6c0220756b08797597cca0a9b316d094a5e07c82c258138777b80d49e069f4f556790e012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93affffffff0100e1f5050000000017a914c1ac75cca0be5b6c924abc68c056d91f78b58bad8700000000")
     /*val t = Transaction(
       version = 2L,
       txIn = List(
@@ -501,7 +498,7 @@ eval Alice.T, Alice.T1, Bob.T1(Oracle.sigO)
     val pubB = privB.publicKey
     val privO = PrivateKey.fromBase58("cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH", Base58.Prefix.SecretKeyTestnet)._1
     val pubO = privO.publicKey
-
+    println("addr  "+Base58Check.encode(Base58.Prefix.ScriptAddressTestnet, Crypto.hash160(Script.write(OP_0 :: OP_PUSHDATA(pubA.hash160)  :: Nil))))
     //creeating an endpoint for each partecipant in order for them to communicate on a specific port
     val alice_p = Participant("Alice", List(pubA), Address("akka", "test", "127.0.0.1", 25000))
     val bob_p = Participant("Bob", List(pubB), Address("akka", "test", "127.0.0.1", 25001))
