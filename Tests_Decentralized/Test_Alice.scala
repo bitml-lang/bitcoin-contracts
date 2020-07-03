@@ -32,18 +32,38 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     super.afterAll()
   }
 
+  /*
+  participant Alice {
+    // Alice's private key
+    private const kA = key:cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDSy59L4
+    // Alice's public key
+    const kApub = kA.toPubkey
+
+    transaction T {
+        input = A_funds: sig(kA)
+        output = 1 BTC: fun(sigB, sigO). versig(Bob.kBpub, Oracle.kOpub; sigB, sigO)
+    }
+}
+   */
   test("Alice") {
+    //get the initial state from the setup function
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
-    //creating akka actors
+
+    //creating akka actor system
     val alice = testSystem.actorOf(Props(classOf[Client]), name="Alice")
 
+    //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
-    val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
+    //val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
+    val a_pub = a_priv.publicKey
 
-    val alice_p = initialState.partdb.fetch("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a").get
+    //fetch the partecipant db from the initial state
+    val alice_p = initialState.partdb.fetch(a_pub.toString()).get
+
     // Initialize Alice with the state information.
     alice ! Init(a_priv, stateJson)
+
     // Start network interface.
     alice ! Listen("test_application.conf", alice_p.endpoint.system)
 
@@ -51,12 +71,15 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    val future2 = alice ? TryAssemble("T", autoPublish = false)
-    //val tx = alice ! SearchTx("T")
-    //println(tx)
+    val future2 = alice ? TryAssemble("T", autoPublish = true)
+
+    //alice has produced a transaction
     val res2 = Await.result(future2, timeout.duration).asInstanceOf[AssembledTx].serializedTx
+
+    //print the serialized transaction
     val tx = Transaction.read(res2)
     println(tx)
+
     // final partecipant shutdown
     alice ! StopListening()
     CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
