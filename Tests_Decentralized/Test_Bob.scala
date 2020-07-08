@@ -53,7 +53,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     bob ! Listen("test_application_b.conf", bob_p.endpoint.system)
 
     // we declare an arbitrary timeout
-    implicit val timeout: Timeout = Timeout(2000 milliseconds)
+    implicit val timeout: Timeout = Timeout(4000 milliseconds)
 
     // bitcoin-core rpc object
     val rpc = new BitcoinJSONRPCClient()
@@ -71,7 +71,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
         val res2 = Await.result(future3, timeout.duration).asInstanceOf[AssembledTx].serializedTx
         val tx = rpc.getRawTransaction(res2)
         // If the transaction gets published we exit the loop
-        println("Publish Success! "+tx)
+        println("Publish Success! ")
         notReceived = false
       } catch {
             // If something goes wrong we will retry
@@ -80,7 +80,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
           notReceived = true
         }
       }
-      Thread.sleep(2000)
+      Thread.sleep(4000)
     }
 
     // final partecipant shutdown

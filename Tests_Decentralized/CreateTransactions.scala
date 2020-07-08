@@ -3,6 +3,7 @@ package Tests_Decentralized
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
 import fr.acinq.bitcoin._
 import scodec.bits.ByteVector
+import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient
 
 object CreateTransactions {
 
@@ -30,8 +31,10 @@ object CreateTransactions {
     println(b_pub)
     println(o_pub)
 
+    println(Bech32.encodeWitnessAddress("bcrt",0,Crypto.hash160(a_pub.value)))
+
     // funds transaction generated on regtest with sendtoaddress bcrt1qpvya0fx4a3rny37jt8twqe4kt95qwcvagvn7ed
-    val funds = Transaction.read("0200000000010192572533e13518d6f63ebfbabdece591aadda200b948a20346be4c460a2529770000000000feffffff02c5e6a31100000000160014a9dce747955f6acf0bc7dfdea18bd06c7ab89fe128ebf505000000001600140b09d7a4d5ec473247d259d6e066b6596807619d0247304402202909755d94f9fbef5d102dcfadc6182fb1eaa9ca0bdf40437017f7ce64415301022023ade9f2cc7ab34a0de3a460f7acb667b48a4eb5fc5133e0ab79286599a7fcbe012102314199713717a1ab88d6bf17f933445c1ba2ba17154b6b45c85c54a288ff79667f000000")
+    val funds = Transaction.read("02000000000101d09468bdabc2281b8d869db936392659bc2baf1438e43558c928955535c871ab0000000000fdffffff0200e1f505000000001600140b09d7a4d5ec473247d259d6e066b6596807619de6c89a3b00000000160014850d4db386a040deddd7e12e9775ffedada11a970247304402201d149721fab0237944ceeaab4f25d7a4a7a643e435fd0030a054800901a5993602207fcff2423e9ae4b633258aee769ed598dab57848cf0f4539865c2a5ab84421af012103f67805049b2aa90e5754faac9f7ff6c53a369f068ff294e1d9d11de16e5a758200000000")
 
     /*
       transaction T {
@@ -43,18 +46,19 @@ object CreateTransactions {
       // our script is a 2-of-2 multisig script
       val redeemScript = Script.createMultiSigMofN(2, Seq(b_pub, o_pub))
       val tmp: Transaction = Transaction(version = 2,
-        txIn = TxIn(OutPoint(funds.hash, 1), sequence = 0xffffffffL, signatureScript = ByteVector.empty, witness = ScriptWitness.empty) :: Nil,
-        txOut = TxOut(1 btc, Script.pay2wsh(redeemScript)) :: Nil,
+        txIn = TxIn(OutPoint(funds.hash, 0), sequence = 0xffffffffL, signatureScript = ByteVector.empty, witness = ScriptWitness.empty) :: Nil,
+        txOut = TxOut(0.99 btc, Script.pay2wsh(redeemScript)) :: Nil,
         lockTime = 0
       )
       // mind this: the pubkey script used for signing is not the prevout pubscript (which is just a push
       // of the pubkey hash), but the actual script that is evaluated by the script engine, in this case a PAY2PKH script
         val pubKeyScript = Script.pay2pkh(a_pub)
-        val sig = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, funds.txOut(1).amount, SigVersion.SIGVERSION_WITNESS_V0, a_priv)
+        val sig = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, funds.txOut(0).amount, SigVersion.SIGVERSION_WITNESS_V0, a_priv)
         val witness = ScriptWitness(Seq(sig, a_pub.value))
         tmp.updateWitness(0, witness)
     }
     //check that the transaction is spendable
+    println(t)
     Transaction.correctlySpends(t, Seq(funds), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
 
     /*
@@ -66,17 +70,18 @@ object CreateTransactions {
     val t1 = {
       val tmp: Transaction = Transaction(version = 2,
         txIn = TxIn(OutPoint(t.hash, 0), sequence = 0xffffffffL, signatureScript = ByteVector.empty) :: Nil,
-        txOut = TxOut(0.999 btc, Script.pay2wpkh(b_pub)) :: Nil,
+        txOut = TxOut(0.98 btc, Script.pay2wpkh(b_pub)) :: Nil,
         lockTime = 0
       )
       //sign the multisig witness input
       val pubKeyScript = Script.write(Script.createMultiSigMofN(2, Seq(b_pub, o_pub)))
-      val sig2 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, t.txOut(0).amount, SigVersion.SIGVERSION_WITNESS_V0, b_priv)
-      val sig3 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, t.txOut(0).amount, SigVersion.SIGVERSION_WITNESS_V0, o_priv)
-      val witness = ScriptWitness(Seq(ByteVector.empty, sig2, sig3, pubKeyScript))
+      val sig2 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, b_priv)
+      val sig3 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, o_priv)
+      val witness = ScriptWitness(Seq(ByteVector.empty, sig2, pubKeyScript))
       tmp.updateWitness(0, witness)
     }
     //check that the transaction is spendable
+    println(t1)
     Transaction.correctlySpends(t1, Seq(funds, t), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
 
     //dump the serialized transactions

@@ -10,7 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import scodec.bits.ByteVector
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient
 import xyz.bitml.api.{ChunkEntry, ChunkPrivacy, ChunkType, Client, IndexEntry, Participant, TxEntry}
-import xyz.bitml.api.messaging.{AskForSigs, AssembledTx, CurrentState, DumpState, Init, Listen, SearchTx, StopListening, TryAssemble}
+import xyz.bitml.api.messaging.{AskForSigs, AssembledTx, Authorize, CurrentState, DumpState, Init, Listen, SearchTx, StopListening, TryAssemble}
 import xyz.bitml.api.persistence.{MetaStorage, ParticipantStorage, State, TxStorage}
 import xyz.bitml.api.serialization.Serializer
 
@@ -63,6 +63,7 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
       // simulation of the oracle checks to decide wether giving signature or not
       if(true) {
         print("Giving the signature to Bob")
+        oracle ! Authorize("T1")
       } else {
         println("No signature for Bob")
       }
