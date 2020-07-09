@@ -52,6 +52,7 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
 
 
     // Start network interface.
+    println(oracle_p.endpoint.system)
     oracle ! Listen("test_application_o.conf", oracle_p.endpoint.system)
 
     // we declare an arbitrary timeout

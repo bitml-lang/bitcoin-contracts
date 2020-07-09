@@ -77,7 +77,7 @@ object CreateTransactions {
       val pubKeyScript = Script.write(Script.createMultiSigMofN(2, Seq(b_pub, o_pub)))
       val sig2 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, b_priv)
       val sig3 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, o_priv)
-      val witness = ScriptWitness(Seq(ByteVector.empty, sig2, pubKeyScript))
+      val witness = ScriptWitness(Seq(ByteVector.empty, sig2, sig3, pubKeyScript))
       tmp.updateWitness(0, witness)
     }
     //check that the transaction is spendable
