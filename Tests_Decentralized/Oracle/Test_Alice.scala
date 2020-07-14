@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -50,12 +51,14 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
-    //creating akka actor system
-    val alice = testSystem.actorOf(Props(classOf[Client]), name="Alice")
+    // Declare client manager
+    val cm = ClientManager()
+
+    // Create actor
+    val alice = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
-    //val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
     val a_pub = a_priv.publicKey
 
     //fetch the partecipant db from the initial state
@@ -71,10 +74,10 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    val future2 = alice ? TryAssemble("T", autoPublish = true)
+    val future = alice ? TryAssemble("T", autoPublish = true)
 
     //alice has produced a transaction
-    val res2 = Await.result(future2, timeout.duration).asInstanceOf[AssembledTx].serializedTx
+    val res2 = cm.getResult(future)
 
     //print the serialized transaction
     val tx = Transaction.read(res2)
@@ -82,7 +85,6 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
 
     // final partecipant shutdown
     alice ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 }

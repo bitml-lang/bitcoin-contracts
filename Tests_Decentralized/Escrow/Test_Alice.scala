@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -22,7 +23,7 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
   private var testSystem: ActorSystem = _
 
   override def beforeAll(): Unit = {
-    testSystem = ActorSystem(name = "internalTestSystem1")
+    testSystem = ActorSystem(name = "internalTestSystemAlice")
     super.beforeAll()
   }
 
@@ -50,8 +51,11 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
-    //creating akka actor system
-    val alice = testSystem.actorOf(Props(classOf[Client]), name="Alice")
+    // Declare the client manager
+    val cm = ClientManager()
+
+    //creating akka actor
+    val alice = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
@@ -71,16 +75,12 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    val future2 = alice ? TryAssemble("T", autoPublish = true)
-
+    val future = alice ? TryAssemble("T", autoPublish = true)
     //alice has produced a transaction
-    val res2 = Await.result(future2, timeout.duration).asInstanceOf[AssembledTx].serializedTx
-
+    val res = cm.getResult(future)
+    cm.rpc.decodeRawTransaction(res)
     //print the serialized transaction
-    val tx = Transaction.read(res2)
-    println(tx)
-
-    val rpc = new BitcoinJSONRPCClient()
+    println(res)
 
     while(true) {
       if(false) {
@@ -91,16 +91,13 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
           // Ask for signature
           alice ! AskForSigs("T1_alice")
           // Try to assemble the transaction and publish it
-          val future = alice ? TryAssemble("T1_alice", autoPublish = true)
-          val res = Await.result(future, timeout.duration).asInstanceOf[AssembledTx].serializedTx
+          alice ? TryAssemble("T1_alice", autoPublish = true)
 
           alice ! AskForSigs("T1_C_alice")
-          val future2 = alice ? TryAssemble("T1_C_alice", autoPublish = true)
-          val res2 = Await.result(future2, timeout.duration).asInstanceOf[AssembledTx].serializedTx
+          alice ? TryAssemble("T1_C_alice", autoPublish = true)
 
           alice ! AskForSigs("T1_C_split_alice")
-          val future3 = alice ? TryAssemble("T1_C_split_alice", autoPublish = true)
-          val res3 = Await.result(future3, timeout.duration).asInstanceOf[AssembledTx].serializedTx
+          alice ? TryAssemble("T1_C_split_alice", autoPublish = true)
 
         } catch {
           case x : Exception => {
@@ -113,7 +110,6 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
 
     // final partecipant shutdown
     alice ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 }

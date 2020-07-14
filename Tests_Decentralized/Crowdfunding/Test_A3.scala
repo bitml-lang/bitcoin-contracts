@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, CoordinatedShutdown, Props}
 import fr.acinq.bitcoin.Crypto.PrivateKey
 import fr.acinq.bitcoin._
@@ -28,12 +29,14 @@ class Test_A3  extends AnyFunSuite with BeforeAndAfterAll  {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
+    // Declare client manager
+    val cm = ClientManager()
+
     //creating akka actor system
-    val a3 = testSystem.actorOf(Props(classOf[Client]), name="A3")
+    val a3 = cm.createActor(testSystem, "A3")
 
     //private and public key of the partecipant
     val a3_priv = PrivateKey.fromBase58("cSmRqDGe8UoQy4jmhPU7c88iCJ6V7uV8EPJ9b194bBX5JqH2YQN5", Base58.Prefix.SecretKeyTestnet)._1
-    //val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
     val a3_pub = a3_priv.publicKey
 
     //fetch the partecipant db from the initial state
@@ -53,8 +56,7 @@ class Test_A3  extends AnyFunSuite with BeforeAndAfterAll  {
 
     // final partecipant shutdown
     a3 ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 
 }

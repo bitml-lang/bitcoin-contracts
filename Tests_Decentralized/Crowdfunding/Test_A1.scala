@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -22,7 +23,7 @@ class Test_A1 extends AnyFunSuite with BeforeAndAfterAll {
   private var testSystem: ActorSystem = _
 
   override def beforeAll(): Unit = {
-    testSystem = ActorSystem(name = "internalTestSystem1")
+    testSystem = ActorSystem(name = "internalTestSystemA1")
     super.beforeAll()
   }
 
@@ -32,30 +33,19 @@ class Test_A1 extends AnyFunSuite with BeforeAndAfterAll {
     super.afterAll()
   }
 
-  /*
-  participant Alice {
-    // Alice's private key
-    private const kA = key:cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDSy59L4
-    // Alice's public key
-    const kApub = kA.toPubkey
-
-    transaction T {
-        input = A_funds: sig(kA)
-        output = 1 BTC: fun(sigB, sigO). versig(Bob.kBpub, Oracle.kOpub; sigB, sigO)
-    }
-}
-   */
   test("A1") {
     //get the initial state from the setup function
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
+    // Declare client manager
+    val cm = ClientManager()
+
     //creating akka actor system
-    val a1 = testSystem.actorOf(Props(classOf[Client]), name="A1")
+    val a1 = cm.createActor(testSystem, "A1")
 
     //private and public key of the partecipant
     val a1_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
-    //val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
     val a1_pub = a1_priv.publicKey
 
     //fetch the partecipant db from the initial state
@@ -75,7 +65,6 @@ class Test_A1 extends AnyFunSuite with BeforeAndAfterAll {
 
     // final partecipant shutdown
     a1 ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 }

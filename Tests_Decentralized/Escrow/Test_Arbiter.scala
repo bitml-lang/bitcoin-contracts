@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -22,7 +23,7 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
   private var testSystem: ActorSystem = _
 
   override def beforeAll(): Unit = {
-    testSystem = ActorSystem(name = "internalTestSystem3")
+    testSystem = ActorSystem(name = "internalTestSystemArbiter")
     super.beforeAll()
   }
 
@@ -37,29 +38,30 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
+    // Declare client manager
+    val cm = ClientManager()
+
     // creating akka actor system
-    val arbiter = testSystem.actorOf(Props(classOf[Client]), name="Arbiter")
+    val arbiter = cm.createActor(testSystem, "Arbiter")
 
     // private and public key
     val c_priv = PrivateKey.fromBase58("cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH", Base58.Prefix.SecretKeyTestnet)._1
     val c_pub = PublicKey(ByteVector.fromValidHex("032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e"))
 
     // fetch the partecipant db from the initial state
-    val arbiter_p = initialState.partdb.fetch("032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e").get
+    val arbiter_p = initialState.partdb.fetch(c_pub.toString()).get
 
     // Initialize Alice with the state information.
     arbiter ! Init(c_priv, stateJson)
 
-
     // Start network interface.
-    println(arbiter_p.endpoint.system)
     arbiter ! Listen("test_application_o.conf", arbiter_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     while(true) {
-      // simulation of the oracle checks to decide wether giving signature or not
+      // simulation of the Arbiter checks to decide which partecipants gets the signature
       if(false) {
         print("Giving the signature to Bob")
         arbiter ! Authorize("T1_C_bob")
@@ -76,7 +78,6 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
 
     // final partecipant shutdown
     arbiter ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 }

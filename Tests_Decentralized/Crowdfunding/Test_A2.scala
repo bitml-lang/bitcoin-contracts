@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -21,7 +22,7 @@ class Test_A2  extends AnyFunSuite with BeforeAndAfterAll  {
   private var testSystem: ActorSystem = _
 
   override def beforeAll(): Unit = {
-    testSystem = ActorSystem(name = "internalTestSystemBob")
+    testSystem = ActorSystem(name = "internalTestSystemA2")
     super.beforeAll()
   }
 
@@ -36,12 +37,14 @@ class Test_A2  extends AnyFunSuite with BeforeAndAfterAll  {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
+    // Declare client manager
+    val cm = ClientManager()
+
     //creating akka actor system
-    val a2 = testSystem.actorOf(Props(classOf[Client]), name="A2")
+    val a2 = cm.createActor(testSystem, "A2")
 
     //private and public key of the partecipant
     val a2_priv = PrivateKey.fromBase58("cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ", Base58.Prefix.SecretKeyTestnet)._1
-    //val a_pub = PublicKey(ByteVector.fromValidHex("03fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a"))
     val a2_pub = a2_priv.publicKey
 
     //fetch the partecipant db from the initial state
@@ -61,8 +64,7 @@ class Test_A2  extends AnyFunSuite with BeforeAndAfterAll  {
 
     // final partecipant shutdown
     a2 ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 
 }

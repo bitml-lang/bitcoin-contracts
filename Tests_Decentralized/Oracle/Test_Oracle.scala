@@ -1,5 +1,6 @@
 package Tests_Decentralized
 
+import Tests_DecentralizedEscrow.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -37,15 +38,18 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
-    // creating akka actor system
-    val oracle = testSystem.actorOf(Props(classOf[Client]), name="Oracle")
+    // Declare client manager
+    val cm = ClientManager()
+
+    // Create actor
+    val oracle = cm.createActor(testSystem, "Oracle")
 
     // private and public key
     val o_priv = PrivateKey.fromBase58("cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH", Base58.Prefix.SecretKeyTestnet)._1
     val o_pub = PublicKey(ByteVector.fromValidHex("032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e"))
 
     // fetch the partecipant db from the initial state
-    val oracle_p = initialState.partdb.fetch("032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e").get
+    val oracle_p = initialState.partdb.fetch(o_pub.toString()).get
 
     // Initialize Alice with the state information.
     oracle ! Init(o_priv, stateJson)
@@ -57,8 +61,6 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
 
     // we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
-
-    println("on")
 
     while(true) {
       // simulation of the oracle checks to decide wether giving signature or not
@@ -73,7 +75,6 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
 
     // final partecipant shutdown
     oracle ! StopListening()
-    CoordinatedShutdown(testSystem).run(CoordinatedShutdown.unknownReason)
-    Thread.sleep(500)
+    cm.shutSystem(testSystem)
   }
 }
