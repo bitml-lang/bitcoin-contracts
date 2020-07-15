@@ -44,30 +44,30 @@ object Setup {
 
 
     // Creating chunks and entries for transactions
-    val t_chunks = manager.createChunk(a_pub, 0)
+    val t_chunks = manager.createPublicChunk(a_pub)
 
-    val t1_alice_chunk_0 = manager.createChunk(a_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_alice_chunk_1 = manager.createChunk(b_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_alice_chunk_0 = manager.createAuthChunk(a_pub, 1)
+    val t1_alice_chunk_1 = manager.createAuthChunk(b_pub)
     val t1_alice_chunks = manager.prepareEntry(t1_alice_chunk_0, t1_alice_chunk_1)
 
-    val t1_bob_chunk_0 = manager.createChunk(a_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_bob_chunk_1 = manager.createChunk(b_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_bob_chunk_0 = manager.createAuthChunk(a_pub, 1)
+    val t1_bob_chunk_1 = manager.createAuthChunk(b_pub)
     val t1_bob_chunks = manager.prepareEntry(t1_bob_chunk_0, t1_bob_chunk_1)
 
-    val t1_c_bob_chunk_0 = manager.createChunk(c_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_c_bob_chunk_1 = manager.createChunk(b_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_c_bob_chunk_0 = manager.createAuthChunk(c_pub, 1)
+    val t1_c_bob_chunk_1 = manager.createAuthChunk(b_pub)
     val t1_c_bob_chunks = manager.prepareEntry(t1_c_bob_chunk_0, t1_c_bob_chunk_1)
 
-    val t1_c_alice_chunk_0 = manager.createChunk(c_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_c_alice_chunk_1 = manager.createChunk(a_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_c_alice_chunk_0 = manager.createAuthChunk(c_pub, 1)
+    val t1_c_alice_chunk_1 = manager.createAuthChunk(a_pub)
     val t1_c_alice_chunks = manager.prepareEntry(t1_c_alice_chunk_0, t1_c_alice_chunk_1)
 
-    val t1_c_split_alice_chunk_0 = manager.createChunk(c_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_c_split_alice_chunk_1 = manager.createChunk(a_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_c_split_alice_chunk_0 = manager.createAuthChunk(c_pub, 1)
+    val t1_c_split_alice_chunk_1 = manager.createAuthChunk(a_pub)
     val t1_c_split_alice_chunks = manager.prepareEntry(t1_c_split_alice_chunk_0, t1_c_split_alice_chunk_1)
 
-    val t1_c_split_bob_chunk_0 = manager.createChunk(c_pub, 1, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
-    val t1_c_split_bob_chunk_1 = manager.createChunk(b_pub, 2, ChunkType.SIG_P2WSH, chunkPrivacy = ChunkPrivacy.AUTH)
+    val t1_c_split_bob_chunk_0 = manager.createAuthChunk(c_pub, 1)
+    val t1_c_split_bob_chunk_1 = manager.createAuthChunk(b_pub)
     val t1_c_split_bob_chunks = manager.prepareEntry(t1_c_split_bob_chunk_0, t1_c_split_bob_chunk_1)
 
     // Linking amounts to entries

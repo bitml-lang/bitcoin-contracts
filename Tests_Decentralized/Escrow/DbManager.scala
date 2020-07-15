@@ -36,7 +36,12 @@ case class DbManager() {
     partdb.save(partecipant)
   }
 
-  def createChunk(pubKey: String, index: Int, chunkType: ChunkType = ChunkType.SIG_P2WPKH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.PUBLIC, data: ByteVector = ByteVector.empty ) : ChunkEntry = {
+  def createPublicChunk(pubKey: String, index: Int = 0, chunkType: ChunkType = ChunkType.SIG_P2WPKH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.PUBLIC, data: ByteVector = ByteVector.empty) : ChunkEntry = {
+    val publicKey = PublicKey(ByteVector.fromValidHex(pubKey))
+    ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data)
+  }
+
+  def createAuthChunk(pubKey: String, index: Int = 0, chunkType: ChunkType = ChunkType.SIG_P2WSH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.AUTH, data: ByteVector = ByteVector.empty): ChunkEntry = {
     val publicKey = PublicKey(ByteVector.fromValidHex(pubKey))
     ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data)
   }
@@ -68,7 +73,14 @@ case class DbManager() {
     State(partdb, txdb, metadb)
   }
 
-  def prepareEntry(chunkEntries: ChunkEntry*) = {
-    chunkEntries
+  def prepareEntry(chunkEntries: ChunkEntry*): Seq[ChunkEntry] = {
+    var i = 0
+    i = chunkEntries(0).chunkIndex
+    val entries = Seq()
+    for (chunkEntry <- chunkEntries) {
+      entries :+ ChunkEntry(chunkEntry.chunkType, chunkEntry.chunkPrivacy, i, chunkEntry.owner, chunkEntry.data)
+      i+=1
+    }
+    entries
   }
 }
