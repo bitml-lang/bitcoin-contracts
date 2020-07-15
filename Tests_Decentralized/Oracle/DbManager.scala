@@ -30,6 +30,12 @@ case class DbManager() {
     partdb.save(partecipant)
   }
 
+  def addPartecipant(name: String, pubKey: String, ip: String, port: Int,  protocol: String = "akka", system: String = "test") : Unit = {
+    val pub = PublicKey(ByteVector.fromValidHex(pubKey))
+    val partecipant = Participant(name, List(pub), Address(protocol, system, ip, port))
+    partdb.save(partecipant)
+  }
+
   def createChunk(pubKey: String, index: Int, chunkType: ChunkType = ChunkType.SIG_P2WPKH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.PUBLIC, data: ByteVector = ByteVector.empty ) : ChunkEntry = {
     val publicKey = PublicKey(ByteVector.fromValidHex(pubKey))
     ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data)
@@ -39,20 +45,30 @@ case class DbManager() {
     IndexEntry(amount, chunks)
   }
 
+  def createEntry(amount : Btc, chunk : ChunkEntry) : IndexEntry = {
+    IndexEntry(amount, chunk)
+  }
+
   def addMeta(name: String, entries : Seq[IndexEntry]) : Unit = {
     var i = 0
-    var data:Map[Int, IndexEntry] = Map()
+    var data: Map[Int, IndexEntry] = Map()
 
     for (entry <- entries) {
       data += (i -> entry)
-      i+=1
+      i += 1
     }
+  }
 
-    val txEntry = TxEntry(name, data)
+  def addMeta(name: String, entry : IndexEntry) : Unit = {
+    val txEntry = TxEntry(name, Map(0 -> entry))
     metadb.save(txEntry)
   }
 
   def getState: State = {
     State(partdb, txdb, metadb)
+  }
+
+  def prepareEntry(chunkEntries: ChunkEntry*) = {
+    chunkEntries
   }
 }
