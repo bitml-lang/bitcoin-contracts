@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Tests_DecentralizedEscrow.ClientManager
+import Managers.ClientManager
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
