@@ -74,8 +74,9 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    contract ? TryAssemble("T", autoPublish = true)
-
+    val future = contract ? TryAssemble("T", autoPublish = true)
+    val res = cm.getResult(future)
+    val published = cm.isPublished(res)
     // final partecipant shutdown
     contract ! StopListening()
     cm.shutSystem(testSystem)

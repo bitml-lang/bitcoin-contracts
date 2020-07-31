@@ -74,22 +74,24 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     //we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
+    var published = false
+    var tries = 0
+
     //contract tries to assemble T and also publish it in the testnet
-    contract ? TryAssemble("T", autoPublish = true)
+    var future = contract ? TryAssemble("T", autoPublish = true)
+    var res = cm.getResult(future)
+    published = cm.isPublished(res)
 
     if(false) {
       contract ! Authorize("T1_bob")
     }
 
-    var published = false
-    var tries = 0
-
     while(!published && tries < 5) {
       // Ask for signature
       contract ! AskForSigs("T1_alice")
       // Try to assemble the transaction and publish it
-      var future = contract ? TryAssemble("T1_alice", autoPublish = true)
-      var res = cm.getResult(future)
+      future = contract ? TryAssemble("T1_alice", autoPublish = true)
+      res = cm.getResult(future)
       published = cm.isPublished(res)
 
       contract ! AskForSigs("T1_C_alice")

@@ -34,20 +34,20 @@ object CreateTransactions {
     println(Bech32.encodeWitnessAddress("bcrt",0,Crypto.hash160(a_pub.value)))
 
     // funds transaction generated on regtest with sendtoaddress bcrt1qpvya0fx4a3rny37jt8twqe4kt95qwcvagvn7ed
-    val funds = Transaction.read("02000000000102cb727ec8eb75d8edfc96d535e37dd55f35212660ba0b316bbbf0548650976a070000000000fdffffff472723f3f91c1a76f21eab4b74332032292c529bd0c4921c144a210a0b4204310100000000fdffffff0240251b0000000000160014832416d1d859ef4523ca38c17fd3f89ccf1a13b600e1f505000000001600140b09d7a4d5ec473247d259d6e066b6596807619d024730440220574f3d98b4dd581b8acbc762f298fae3b6768a3d68455a7f2e7e21dd3dd1fdcd02206b888c421b7c874602e07d24606768bbf219d169d80857f5d6869e86b70682ed012103798b7ff9360ed33a8b071ae13d041a04395dfb9a8ea1e9e81957b7bc24d5654302473044022056e325ebaea03359d73aa07ac78d563fd87cd4d58222e219f0fbcd2e360ba8b402205c2f25f9d924fc20fa017efd09306a9ac1cb4533499d29c4f7b84d0baaea524b0121028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced7c1000000")
+    val funds = Transaction.read("0200000000010126d018cd48f3abca4e73da3b53c16d49e461428e2a2c6bde60518c55eccf9df30000000000fdffffff0200e1f505000000001600140b09d7a4d5ec473247d259d6e066b6596807619d7310102401000000160014d5dee1ef6d75d8f014be7a415bc31ce8e8901aea02473044022053fa1b972ae7f0f4358c0df624f99fad8d858de06adcebad5e0cdab00a344ab902206af154ad6492ff67d592def37567605d30913518c0eb9f34195c003f4a814eb9012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a00000000")
 
     val t = {
       // our script is a 2-of-2 multisig script
       val redeemScript = Script.createMultiSigMofN(2, Seq(a_pub, b_pub, o_pub))
       val tmp: Transaction = Transaction(version = 2,
-        txIn = TxIn(OutPoint(funds.hash, 1), sequence = 0xffffffffL, signatureScript = ByteVector.empty, witness = ScriptWitness.empty) :: Nil,
+        txIn = TxIn(OutPoint(funds.hash, 0), sequence = 0xffffffffL, signatureScript = ByteVector.empty, witness = ScriptWitness.empty) :: Nil,
         txOut = TxOut(0.99 btc, Script.pay2wsh(redeemScript)) :: Nil,
         lockTime = 0
       )
       // mind this: the pubkey script used for signing is not the prevout pubscript (which is just a push
       // of the pubkey hash), but the actual script that is evaluated by the script engine, in this case a PAY2PKH script
       val pubKeyScript = Script.pay2pkh(a_pub)
-      val sig = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, funds.txOut(1).amount, SigVersion.SIGVERSION_WITNESS_V0, a_priv)
+      val sig = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, funds.txOut(0).amount, SigVersion.SIGVERSION_WITNESS_V0, a_priv)
       val witness = ScriptWitness(Seq(sig, a_pub.value))
       tmp.updateWitness(0, witness)
     }
@@ -99,12 +99,12 @@ object CreateTransactions {
       //sign the multisig witness input
       val pubKeyScript = Script.write(Script.createMultiSigMofN(2, Seq(a_pub, b_pub, o_pub)))
       val sig2 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, a_priv)
-      val sig3 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, b_priv)
-      val witness = ScriptWitness(Seq(ByteVector.empty, ByteVector.empty, ByteVector.empty, pubKeyScript))
+      val sig3 = Transaction.signInput(tmp, 0, pubKeyScript, SIGHASH_ALL, 0.99 btc, SigVersion.SIGVERSION_WITNESS_V0, o_priv)
+      val witness = ScriptWitness(Seq(ByteVector.empty, sig2, sig3, pubKeyScript))
       tmp.updateWitness(0, witness)
     }
     //check that the transaction is spendable
-
+    Transaction.correctlySpends(t1_split, Seq(t), ScriptFlags.STANDARD_SCRIPT_VERIFY_FLAGS)
     //dump the serialized transactions
     println("t "+t.toString())
     println("t1_bob "+t1_bob.toString())

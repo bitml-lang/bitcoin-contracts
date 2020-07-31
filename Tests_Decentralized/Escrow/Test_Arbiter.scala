@@ -67,7 +67,7 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
       case 0 => contract ! Authorize("T1_C_bob")
       case 1 => contract ! Authorize("T1_C_alice")
       case 2 => contract ! Authorize("T1_C_split_alice")
-        contract ! Authorize("T1_C_split_bob")
+                contract ! Authorize("T1_C_split_bob")
       case whoa => println("Unexpected control value "+ whoa.toString)
     }
 
