@@ -46,23 +46,23 @@ object Setup {
     // Creating chunks and entries for transactions
     val t_chunks = manager createPublicChunk a_pub
 
-    val t1_alice_chunks = manager prepareEntry (manager.createAuthChunk(a_pub, 1),
-                                                manager.createAuthChunk(b_pub, 2))
+    val t1_alice_chunks = manager prepareEntry (manager createAuthChunk(a_pub onIndex 1),
+                                                manager createAuthChunk(b_pub onIndex 2))
 
-    val t1_bob_chunks = manager prepareEntry (manager.createAuthChunk(a_pub, 1),
-                                              manager.createAuthChunk(b_pub, 2))
+    val t1_bob_chunks = manager prepareEntry (manager createAuthChunk(a_pub onIndex 1),
+                                              manager createAuthChunk(b_pub onIndex 2))
 
-    val t1_c_bob_chunks = manager prepareEntry (manager.createAuthChunk(c_pub, 1),
-                                                manager.createAuthChunk(b_pub, 2))
+    val t1_c_bob_chunks = manager prepareEntry (manager createAuthChunk(c_pub onIndex 1),
+                                                manager createAuthChunk(b_pub onIndex 2))
 
-    val t1_c_alice_chunks = manager prepareEntry (manager.createAuthChunk(c_pub, 1),
-                                                  manager.createAuthChunk(a_pub, 2))
+    val t1_c_alice_chunks = manager prepareEntry (manager createAuthChunk(c_pub onIndex 1),
+                                                  manager createAuthChunk(a_pub onIndex 2))
 
-    val t1_c_split_alice_chunks = manager prepareEntry (manager.createAuthChunk(c_pub, 1),
-                                                        manager.createAuthChunk(a_pub,2))
+    val t1_c_split_alice_chunks = manager prepareEntry (manager createAuthChunk(c_pub onIndex 1),
+                                                        manager createAuthChunk(a_pub onIndex 2))
 
-    val t1_c_split_bob_chunks = manager prepareEntry (manager.createAuthChunk(c_pub, 1),
-                                                      manager.createAuthChunk(b_pub, 2))
+    val t1_c_split_bob_chunks = manager prepareEntry (manager createAuthChunk(c_pub onIndex 1),
+                                                      manager createAuthChunk(b_pub onIndex 2))
 
     // Linking amounts to entries
     val t_entry = manager createEntry ((1 btc) forChunks t_chunks)

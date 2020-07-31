@@ -44,10 +44,8 @@ case class DbManager() {
     partdb.save(partecipant)
   }
 
-  def addPartecipant(part: Tuple4[String, String, String, Int], protocol: String = "akka", system: String = "test") : Unit = {
-    val pub = PublicKey(ByteVector.fromValidHex(part._2))
-    val partecipant = Participant(part._1, List(pub), Address(protocol, system, part._3, part._4))
-    partdb.save(partecipant)
+  def addPartecipant(part: Tuple4[String, String, String, Int]) : Unit = {
+    addPartecipant(part._1, part._2, part._3, part._4)
   }
 
   def addPartecipants(info: Tuple4[String, String, String, Int]*) : Unit = {
@@ -56,9 +54,9 @@ case class DbManager() {
     }
   }
 
-  def createPublicChunk(pubKey: String, index: Int = 0, chunkType: ChunkType = ChunkType.SIG_P2WPKH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.PUBLIC, data: ByteVector = ByteVector.empty) : ChunkEntry = {
+  def createPublicChunk(pubKey: String, index: Int = 0, chunkType: ChunkType = ChunkType.SIG_P2WPKH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.PUBLIC, data: ByteVector = ByteVector.empty) : Seq[ChunkEntry] = {
     val publicKey = PublicKey(ByteVector.fromValidHex(pubKey))
-    ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data)
+    Seq(ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data))
   }
 
   def createAuthChunk(pubKey: String, index: Int = 0, chunkType: ChunkType = ChunkType.SIG_P2WSH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.AUTH, data: ByteVector = ByteVector.empty): ChunkEntry = {
@@ -66,14 +64,12 @@ case class DbManager() {
     ChunkEntry(chunkType, chunkPrivacy, index, Option(publicKey), data)
   }
 
-  def createPublicChunk(info: Seq[Any], chunkType: ChunkType = ChunkType.SIG_P2WSH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.AUTH, data: ByteVector = ByteVector.empty) : ChunkEntry = {
-    val publicKey = PublicKey(ByteVector.fromValidHex(info(0).toString))
-    ChunkEntry(chunkType, chunkPrivacy, info(1).toString.toInt, Option(publicKey), data)
+  def createPublicChunk(info: Seq[Any]) : Seq[ChunkEntry] = {
+    createPublicChunk(info(0).toString, info(1).toString.toInt)
   }
 
-  def createAuthChunk(info: Seq[Any], chunkType: ChunkType = ChunkType.SIG_P2WSH, chunkPrivacy: ChunkPrivacy = ChunkPrivacy.AUTH, data: ByteVector = ByteVector.empty): ChunkEntry = {
-    val publicKey = PublicKey(ByteVector.fromValidHex(info(0).toString))
-    ChunkEntry(chunkType, chunkPrivacy, info(1).toString.toInt, Option(publicKey), data)
+  def createAuthChunk(info: Seq[Any]): ChunkEntry = {
+    createAuthChunk(info(0).toString, info(1).toString.toInt)
   }
 
   def createEntry(amount : Btc, chunks : Seq[ChunkEntry]) : IndexEntry = {

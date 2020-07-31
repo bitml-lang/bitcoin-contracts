@@ -41,7 +41,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val cm = ClientManager()
 
     // Create actor
-    val bob = cm.createActor(testSystem, "Bob")
+    val contract = cm.createActor(testSystem, "Bob")
 
     // private and public key
     val b_priv = PrivateKey.fromBase58("cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ", Base58.Prefix.SecretKeyTestnet)._1
@@ -51,40 +51,31 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val bob_p = initialState.partdb.fetch(b_pub.toString()).get
 
     // Initialize Alice with the state information.
-    bob ! Init(b_priv, stateJson)
+    contract ! Init(b_priv, stateJson)
 
     // Start network interface.
-    bob ! Listen("test_application_b.conf", bob_p.endpoint.system)
+    contract ! Listen("test_application_b.conf", bob_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout: Timeout = Timeout(2000 milliseconds)
 
-    var notReceived = true
-
+    var published = false
+    var tries = 0
     // Bob should keep trying to publish the transaction until he receives Oracle's signature
-    while (notReceived) {
+    while (!published && tries < 5) {
       // Ask for signature
-      bob ! AskForSigs("T1")
-      try {
-        // Try to assemble the transaction and publish it
-        val future3 = bob ? TryAssemble("T1", autoPublish = true)
-        val res2 = Await.result(future3, timeout.duration).asInstanceOf[AssembledTx].serializedTx
-        val tx = cm.rpc.getRawTransaction(res2)
-        // If the transaction gets published we exit the loop
-        println("Publish Success! ")
-        notReceived = false
-      } catch {
-            // If something goes wrong we will retry
-        case x : Exception => {
-          println("Publish Failed... Retrying")
-          notReceived = true
-        }
-      }
+      contract ! AskForSigs("T1")
+
+      // Try to assemble the transaction and publish it
+      val future = contract ? TryAssemble("T1", autoPublish = true)
+      val res = cm.getResult(future)
+      published = cm.isPublished(res)
+      tries+=1
       Thread.sleep(4000)
     }
 
     // final partecipant shutdown
-    bob ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 

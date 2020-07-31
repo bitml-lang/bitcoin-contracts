@@ -41,7 +41,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val cm = ClientManager()
 
     // creating akka actor
-    val bob = cm.createActor(testSystem, "Bob")
+    val contract = cm.createActor(testSystem, "Bob")
 
     // private and public key
     val b_priv = PrivateKey.fromBase58("cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ", Base58.Prefix.SecretKeyTestnet)._1
@@ -51,48 +51,46 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val bob_p = initialState.partdb.fetch(b_pub.toString()).get
 
     // Initialize Alice with the state information.
-    bob ! Init(b_priv, stateJson)
+    contract ! Init(b_priv, stateJson)
 
     // Start network interface.
-    bob ! Listen("test_application_b.conf", bob_p.endpoint.system)
+    contract ! Listen("test_application_b.conf", bob_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout: Timeout = Timeout(2000 milliseconds)
 
-    var notReceived = true
+    if(false) {
+      contract ! Authorize("T1_alice")
+    }
 
+    var published = false
+    var tries = 0
+    
     // Bob should keep trying to publish the transaction until he receives Oracle's signature
-    while (notReceived) {
-      if(true) {
-        try {
+    while (!published && tries < 5) {
+      // Ask for signature
+      contract ! AskForSigs("T1_bob")
+      // Try to assemble the transaction and publish it
+      var future = contract ? TryAssemble("T1_bob", autoPublish = true)
+      var res = cm.getResult(future)
+      published = cm.isPublished(res)
 
-          // Ask for signature
-          bob ! AskForSigs("T1_bob")
-          // Try to assemble the transaction and publish it
-          bob ? TryAssemble("T1_bob", autoPublish = true)
+      contract ! AskForSigs("T1_C_bob")
+      future = contract ? TryAssemble("T1_C_bob", autoPublish = true)
+      res = cm.getResult(future)
+      published = cm.isPublished(res)
 
-          bob ! AskForSigs("T1_C_bob")
-          bob ? TryAssemble("T1_C_bob", autoPublish = true)
+      contract ! AskForSigs("T1_C_split_bob")
+      contract ? TryAssemble("T1_C_split_bob", autoPublish = true)
+      res = cm.getResult(future)
+      published = cm.isPublished(res)
 
-          bob ! AskForSigs("T1_C_split_bob")
-          bob ? TryAssemble("T1_C_split_bob", autoPublish = true)
-
-        } catch {
-          // If something goes wrong we will retry
-          case x: Exception => {
-            println("Publish Failed... Retrying")
-            notReceived = true
-          }
-        }
-      } else {
-        println("Refunding alice")
-        bob ! Authorize("T1_alice")
-      }
-      Thread.sleep(4000)
+      tries+=1
+      Thread.sleep(5000)
     }
 
     // final partecipant shutdown
-    bob ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 

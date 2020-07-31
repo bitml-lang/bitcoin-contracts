@@ -42,7 +42,7 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     // creating akka actor system
-    val arbiter = cm.createActor(testSystem, "Arbiter")
+    val contract = cm.createActor(testSystem, "Arbiter")
 
     // private and public key
     val c_priv = PrivateKey.fromBase58("cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH", Base58.Prefix.SecretKeyTestnet)._1
@@ -52,32 +52,33 @@ class Test_Arbiter extends AnyFunSuite with BeforeAndAfterAll {
     val arbiter_p = initialState.partdb.fetch(c_pub.toString()).get
 
     // Initialize Alice with the state information.
-    arbiter ! Init(c_priv, stateJson)
+    contract ! Init(c_priv, stateJson)
 
     // Start network interface.
-    arbiter ! Listen("test_application_o.conf", arbiter_p.endpoint.system)
+    contract ! Listen("test_application_o.conf", arbiter_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
-    while(true) {
-      // simulation of the Arbiter checks to decide which partecipants gets the signature
-      if(false) {
-        print("Giving the signature to Bob")
-        arbiter ! Authorize("T1_C_bob")
-      } else if(false) {
-        println("Giving the signature to Alice")
-        arbiter ! Authorize("T1_C_alice")
-      } else {
-        println("Issuing a partial refund")
-        arbiter ! Authorize("T1_C_split_alice")
-        arbiter ! Authorize("T1_C_split_bob")
-      }
+    val control = 2
+
+    // simulation of the Arbiter checks to decide which partecipants gets the signature
+    control match {
+      case 0 => contract ! Authorize("T1_C_bob")
+      case 1 => contract ! Authorize("T1_C_alice")
+      case 2 => contract ! Authorize("T1_C_split_alice")
+        contract ! Authorize("T1_C_split_bob")
+      case whoa => println("Unexpected control value "+ whoa.toString)
+    }
+
+    var tries = 0
+    while(tries < 5) {
       Thread.sleep(5000)
+      tries+=1
     }
 
     // final partecipant shutdown
-    arbiter ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 }

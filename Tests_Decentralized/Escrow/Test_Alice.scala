@@ -55,7 +55,7 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     //creating akka actor
-    val alice = cm.createActor(testSystem, "Alice")
+    val contract = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
@@ -66,50 +66,48 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val alice_p = initialState.partdb.fetch(a_pub.toString()).get
 
     // Initialize Alice with the state information.
-    alice ! Init(a_priv, stateJson)
+    contract ! Init(a_priv, stateJson)
 
     // Start network interface.
-    alice ! Listen("test_application.conf", alice_p.endpoint.system)
+    contract ! Listen("test_application.conf", alice_p.endpoint.system)
 
     //we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
-    //alice tries to assemble T and also publish it in the testnet
-    val future = alice ? TryAssemble("T", autoPublish = true)
-    //alice has produced a transaction
-    val res = cm.getResult(future)
-    cm.rpc.decodeRawTransaction(res)
-    //print the serialized transaction
-    println(res)
+    //contract tries to assemble T and also publish it in the testnet
+    contract ? TryAssemble("T", autoPublish = true)
 
-    while(true) {
-      if(false) {
-        println("Giving signature")
-        alice ! Authorize("T1_bob")
-      } else {
-        try {
-          // Ask for signature
-          alice ! AskForSigs("T1_alice")
-          // Try to assemble the transaction and publish it
-          alice ? TryAssemble("T1_alice", autoPublish = true)
+    if(false) {
+      contract ! Authorize("T1_bob")
+    }
 
-          alice ! AskForSigs("T1_C_alice")
-          alice ? TryAssemble("T1_C_alice", autoPublish = true)
+    var published = false
+    var tries = 0
 
-          alice ! AskForSigs("T1_C_split_alice")
-          alice ? TryAssemble("T1_C_split_alice", autoPublish = true)
+    while(!published && tries < 5) {
+      // Ask for signature
+      contract ! AskForSigs("T1_alice")
+      // Try to assemble the transaction and publish it
+      var future = contract ? TryAssemble("T1_alice", autoPublish = true)
+      var res = cm.getResult(future)
+      published = cm.isPublished(res)
 
-        } catch {
-          case x : Exception => {
-            println("Publishing failed...retrying")
-          }
-        }
-      }
+      contract ! AskForSigs("T1_C_alice")
+      future = contract ? TryAssemble("T1_C_alice", autoPublish = true)
+      res = cm.getResult(future)
+      published = cm.isPublished(res)
+
+      contract ! AskForSigs("T1_C_split_alice")
+      future = contract ? TryAssemble("T1_C_split_alice", autoPublish = true)
+      res = cm.getResult(future)
+      published = cm.isPublished(res)
+
+      tries+=1
       Thread.sleep(5000)
     }
 
     // final partecipant shutdown
-    alice ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 }

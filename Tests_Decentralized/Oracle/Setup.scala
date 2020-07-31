@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Managers.DbManager
+import Managers._
 import Managers.Helpers._
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
@@ -46,8 +46,8 @@ object Setup {
                                           manager createAuthChunk (b_pub onIndex 1))
 
     // Linking amounts to entries
-    val t_entry = manager createEntry((1 btc) forChunks t_chunks)
-    val t1_entry = manager createEntry((0.99 btc) forChunks t1_chunks)
+    val t_entry = manager createEntry ((1 btc) forChunks t_chunks)
+    val t1_entry = manager createEntry ((0.99 btc) forChunks t1_chunks)
 
     // Add the metadata of the transactions
     manager addMetas ("T" withEntry t_entry,

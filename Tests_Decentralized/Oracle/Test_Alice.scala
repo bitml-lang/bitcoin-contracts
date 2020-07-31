@@ -55,7 +55,7 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     // Create actor
-    val alice = cm.createActor(testSystem, "Alice")
+    val contract = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
@@ -65,26 +65,19 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val alice_p = initialState.partdb.fetch(a_pub.toString()).get
 
     // Initialize Alice with the state information.
-    alice ! Init(a_priv, stateJson)
+    contract ! Init(a_priv, stateJson)
 
     // Start network interface.
-    alice ! Listen("test_application.conf", alice_p.endpoint.system)
+    contract ! Listen("test_application.conf", alice_p.endpoint.system)
 
     //we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    val future = alice ? TryAssemble("T", autoPublish = true)
-
-    //alice has produced a transaction
-    val res2 = cm.getResult(future)
-
-    //print the serialized transaction
-    val tx = Transaction.read(res2)
-    println(tx)
+    contract ? TryAssemble("T", autoPublish = true)
 
     // final partecipant shutdown
-    alice ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 }

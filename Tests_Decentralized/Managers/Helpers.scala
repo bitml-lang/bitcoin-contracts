@@ -1,7 +1,7 @@
 package Managers
 
 import fr.acinq.bitcoin.Btc
-import xyz.bitml.api.IndexEntry
+import xyz.bitml.api.{ChunkEntry, IndexEntry}
 
 object Helpers {
   implicit class StringSeq(x: String) {
@@ -12,7 +12,7 @@ object Helpers {
   }
 
   implicit class ChunkSeq(x: Btc) {
-    def forChunks[ChunkEntry](f: => Seq[ChunkEntry]) : Tuple2[Btc, Seq[ChunkEntry]] = (x, f)
-    def forChunks[ChunkEntry](f: => ChunkEntry) : Tuple2[Btc, Seq[ChunkEntry]] = (x, Seq(f))
+    //def forChunks[ChunkEntry](f: => ChunkEntry) : (Btc, Seq[ChunkEntry]) = (x, Seq(f))
+    def forChunks[ChunkEntry](f: => Seq[ChunkEntry]) : (Btc, Seq[ChunkEntry]) = (x, f)
   }
 }

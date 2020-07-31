@@ -11,6 +11,17 @@ import xyz.bitml.api.messaging.AssembledTx
 import scala.concurrent.{Await, Future}
 
 case class ClientManager() {
+  def isPublished(res: String): Boolean = {
+    try {
+      rpc.getTransaction(res)
+      true
+    } catch {
+      case x : Exception => {
+        false
+      }
+    }
+  }
+
   val rpc = new BitcoinJSONRPCClient()
 
   def getResult(future : Future[Any], timeoutMillis : Int = 2000) : String = {

@@ -42,7 +42,7 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     // Create actor
-    val oracle = cm.createActor(testSystem, "Oracle")
+    val contract = cm.createActor(testSystem, "Oracle")
 
     // private and public key
     val o_priv = PrivateKey.fromBase58("cQAEMfAQwbVDSUDT3snYu9QVfbdBTVMrm36zoArizBkAaPYTtLdH", Base58.Prefix.SecretKeyTestnet)._1
@@ -52,29 +52,28 @@ class Test_Oracle extends AnyFunSuite with BeforeAndAfterAll {
     val oracle_p = initialState.partdb.fetch(o_pub.toString()).get
 
     // Initialize Alice with the state information.
-    oracle ! Init(o_priv, stateJson)
+    contract ! Init(o_priv, stateJson)
 
 
     // Start network interface.
     println(oracle_p.endpoint.system)
-    oracle ! Listen("test_application_o.conf", oracle_p.endpoint.system)
+    contract ! Listen("test_application_o.conf", oracle_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
-    while(true) {
-      // simulation of the oracle checks to decide wether giving signature or not
-      if(true) {
-        print("Giving the signature to Bob")
-        oracle ! Authorize("T1")
-      } else {
-        println("No signature for Bob")
-      }
-      Thread.sleep(2000)
+    // simulation of the oracle checks to decide wether giving signature or not
+    if(true) {
+      print("Giving the signature to Bob")
+      contract ! Authorize("T1")
+    } else {
+      println("No signature for Bob")
     }
 
+    Thread.sleep(20000)
+
     // final partecipant shutdown
-    oracle ! StopListening()
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 }
