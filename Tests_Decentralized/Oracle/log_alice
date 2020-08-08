@@ -1,0 +1,9 @@
+05:22:37 - Alice - Contract started - Executing Setup
+05:22:37 - Alice - Actor System Creation!
+05:22:37 - Alice - Fetching contract partecipants from Setup
+05:22:37 - Alice - Contract initiated with private key and initial state
+05:22:37 - Alice - Starting newtork interface - Listening incoming traffic on port 25000
+05:22:37 - Alice - Trying to assemble and publish transaction T
+05:22:38 - Alice - Assembled T with raw 0200000000010102d46cc99398582e0c7a1f4817243d248e22596d8a2f541e533d5407692ea7030000000000ffffffff01c09ee605000000002200203a5fcea85c2dca4480bd79f80bff55356b4779c6b5ef870a6c8086c1285e932f02483045022100a2931bd002bfa506019758ce79bb3d9ddfac8e7befd44a64cb31b73919c99079022078cdff077483f5eed4573148f9f0b064892aabd8089f7b564785d19e58527875012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a00000000
+05:22:38 - Alice - Publish successfull.. Contract executed successfully
+05:22:38 - Alice - Shutting Down

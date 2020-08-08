@@ -1,0 +1,9 @@
+05:24:29 - Oracle - Contract started - Executing Setup
+05:24:30 - Oracle - Actor System Creation!
+05:24:30 - Oracle - Fetching contract partecipants from Setup
+05:24:30 - Oracle - Contract initiated with private key and initial state
+05:24:30 - Oracle - Starting newtork interface - Listening incoming traffic on port 25002
+05:24:30 - Oracle - Check if the guard allows Bob to get the signature
+05:24:30 - Oracle - Unlocking the signature for Bob on T1
+05:24:30 - Oracle - Waiting 20 seconds before shutting down
+05:24:50 - Oracle - Shutting Down

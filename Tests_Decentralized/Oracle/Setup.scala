@@ -40,16 +40,19 @@ object Setup {
                             "Oracle" withInfo (o_pub, "127.0.0.1", 25002))
 
     // Creating chunks and entries for transactions
-    val t_chunks = manager createPublicChunk a_pub //implicit index=0
+    // Public chunk with Alice's signature for transaction T
+    val t_chunks = manager createPublicChunk a_pub
 
+    // Auth chunks for T1 that will contain the signatures from Bob and the Oracle
     val t1_chunks = manager prepareEntry (manager createAuthChunk (b_pub onIndex 1),
                                           manager createAuthChunk (o_pub onIndex 2))
 
-    // Linking amounts to entries
+    // Linking amounts to entries, every bitcoin amount has to be linked to the signatures in order to make the right signatures
+    // This is necessary since a recent BIP (Bitcoin Improvement Proposal) makes difficult in segwit transactions to just take the bitcoin amount from previous tx
     val t_entry = manager createEntry ((1 btc) forChunks t_chunks)
     val t1_entry = manager createEntry ((0.99 btc) forChunks t1_chunks)
 
-    // Add the metadata of the transactions
+    // Add the metadata of the transactions, for every raw transaction previously added we save the metadata we just created
     manager addMetas ("T" withEntry t_entry,
                      "T1" withEntry t1_entry)
 

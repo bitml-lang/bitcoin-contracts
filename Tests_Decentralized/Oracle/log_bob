@@ -1,0 +1,11 @@
+05:25:58 - Bob - Contract started - Executing Setup
+05:25:58 - Bob - Actor System Creation!
+05:25:58 - Bob - Fetching contract partecipants from Setup
+05:25:58 - Bob - Contract initiated with private key and initial state
+05:25:58 - Bob - Starting newtork interface - Listening incoming traffic on port 25001
+05:25:58 - Bob - Try number: 0
+05:25:58 - Bob - Asking signature for transaction T1
+05:25:58 - Bob - Trying to assemble transaction T1
+05:25:59 - Bob - Assembled T1 with raw 02000000000101ee216806ef5b70a0d2a6453e5cad08180703795f8193cdb90c2585413e797ada0000000000ffffffff01805cd70500000000160014d5ee2547793a01cd846e1347ba907821493587df0400483045022100c1a07c05343b72a14ab4ccbb7736d6f7c023665ac9557d30df1cdd8a16bf7eaa0220744c8670d0a37622bef6cde3c7bdc8a195aacef927dc22e861ed3487c9b68d0f0147304402203848bb2dbc4d34ea0ea7b7be387dc7f4eb56eec1c99b0d61d8a4ebb3d31a236402201881ac693f6c466a2294e6b4d48f400e3ad2febf1e2245ad9fbfdf968701eb4501475221028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced721032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e52ae00000000
+05:25:59 - Bob - Publish successfull.. Contract executed successfully
+05:26:03 - Bob - Shutting Down
