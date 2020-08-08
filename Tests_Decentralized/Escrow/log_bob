@@ -1,0 +1,24 @@
+17:42:53 - Bob - Contract started - Executing Setup
+17:42:53 - Bob - Actor System Creation!
+17:42:53 - Bob - Fetching contract partecipants from Setup
+17:42:53 - Bob - Contract initiated with private key and initial state
+17:42:53 - Bob - Starting newtork interface - Listening incoming traffic on port 25001
+17:42:53 - Bob - Checking if Bob should authorize Alice to access signature for T1_alice
+17:42:53 - Bob - Signature for T1_alice not authorized
+17:42:53 - Bob - Try number: 0
+17:42:53 - Bob - Asking signature for transaction T1_bob
+17:42:53 - Bob - Trying to assemble and publish transaction T1_bob
+17:42:54 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_bob: Missing datapoints from Set(Alice)
+17:42:54 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_bob: Missing authorization from Set(Alice)
+17:42:54 - Bob - Publish failed
+17:42:54 - Bob - Asking signature for transaction T1_C_bob
+17:42:54 - Bob - Trying to assemble and publish transaction T1_C_bob
+17:42:54 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_bob: Missing datapoints from Set(Arbiter)
+17:42:55 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_bob: Missing authorization from Set(Arbiter)
+17:42:55 - Bob - Publish failed
+17:42:55 - Bob - Asking signature for transaction T1_C_split_bob
+17:42:55 - Bob - Trying to assemble and publish transaction T1_C_split_bob
+17:42:55 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_split_bob: Missing datapoints from Set(Arbiter)
+17:42:55 - Bob - Assembled T1_C_split_bob with raw 0200000000010137f593980bab7a27b6931eb08d3fedc01732a9e0ab76838a92fdd4185c28d11f0000000000ffffffff0240aeeb02000000001600140b09d7a4d5ec473247d259d6e066b6596807619d40aeeb0200000000160014d5ee2547793a01cd846e1347ba907821493587df040047304402200089a6f456e53e71ac547119d65fe61c7eb98eefc1d42128a7d9b57695a22ad902204d5fb22e9e1a889d523750141aa57065150df6903200d984c772159958de96bf01473044022040263f7a31245a7e2ff8fdd0a3ed6b72e9c5936a15945c5e459b2e246919eec0022028da4cf53d103bae9e2652a1289aefae3858bbb6f3a799af51e6e2ee55a5f4aa0169522103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a21028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced721032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e53ae00000000
+17:42:55 - Bob - Publish successfull... Contract execution success!
+17:43:00 - Bob - Shutting Down

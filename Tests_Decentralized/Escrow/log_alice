@@ -1,0 +1,42 @@
+17:42:47 - Alice - Contract started - Executing Setup
+17:42:48 - Alice - Actor System Creation!
+17:42:48 - Alice - Fetching contract partecipants from Setup
+17:42:48 - Alice - Contract initiated with private key and initial state
+17:42:48 - Alice - Starting newtork interface - Listening incoming traffic on port 25000
+17:42:48 - Alice - Trying to assemble and publish transaction T
+17:42:49 - Alice - Assembled T with raw 02000000000101906dc25636e74dcdd32abd77895a92484d5775e4308b6dc89075c8b936cd11970000000000ffffffff01c09ee6050000000022002061380d8e7a652ddb421264cea9870ff21c444f0ba67cb8298c09a3cb3d04d23102483045022100b39f3a2f863c694e8219e0de65cc73979a853b4b6dc466ca09000c48fcc905de02207aad6b9d37229cf4c4e8390d7f855f3e9aeeea8434b41dcf2a7a48b181d11de2012103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a00000000
+17:42:49 - Alice - Publish successfull
+17:42:49 - Alice - Checking if Alice should authorize Bob to access signature for T1_bob
+17:42:49 - Alice - Signature for T1_bob not authorized
+17:42:49 - Alice - Try number: 0
+17:42:49 - Alice - Asking signature for transaction T1_alice
+17:42:49 - Alice - Trying to assemble and publish transaction T1_alice
+17:42:49 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_alice: Missing datapoints from Set(Bob)
+17:42:49 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_alice: Missing authorization from Set(Bob)
+17:42:49 - Alice - Publish failed
+17:42:49 - Alice - Asking signature for transaction T1_C_alice
+17:42:49 - Alice - Trying to assemble and publish transaction T1_C_alice
+17:42:49 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_alice: Missing datapoints from Set(Arbiter)
+17:42:50 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_alice: Missing authorization from Set(Arbiter)
+17:42:50 - Alice - Publish failed
+17:42:50 - Alice - Asking signature for transaction T1_C_split_alice
+17:42:50 - Alice - Trying to assemble and publish transaction T1_C_split_alice
+17:42:50 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_split_alice: Missing datapoints from Set(Arbiter)
+17:42:50 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_split_alice: Missing authorization from Set(Arbiter)
+17:42:50 - Alice - Publish failed
+17:42:55 - Alice - Try number: 1
+17:42:55 - Alice - Asking signature for transaction T1_alice
+17:42:55 - Alice - Trying to assemble and publish transaction T1_alice
+17:42:55 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_alice: Missing datapoints from Set(Bob)
+17:42:56 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_alice: Missing authorization from Set(Bob)
+17:42:56 - Alice - Publish failed
+17:42:56 - Alice - Asking signature for transaction T1_C_alice
+17:42:56 - Alice - Trying to assemble and publish transaction T1_C_alice
+17:42:56 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_alice: Missing datapoints from Set(Arbiter)
+17:42:56 ERROR Client {xyz.bitml.api.Client assembleTx} - Cannot assemble tx T1_C_alice: Missing authorization from Set(Arbiter)
+17:42:56 - Alice - Publish failed
+17:42:56 - Alice - Asking signature for transaction T1_C_split_alice
+17:42:56 - Alice - Trying to assemble and publish transaction T1_C_split_alice
+17:42:56 - Alice - Assembled T1_C_split_alice with raw 0200000000010137f593980bab7a27b6931eb08d3fedc01732a9e0ab76838a92fdd4185c28d11f0000000000ffffffff0240aeeb02000000001600140b09d7a4d5ec473247d259d6e066b6596807619d40aeeb0200000000160014d5ee2547793a01cd846e1347ba907821493587df040047304402204eac7cd2c4818b500fb97d93857df9cfdb792662100aa69d9cc4d4ac3acc735f02201e8a668b3d675c54abfbb9a2104f04845603f1ba4fca73aae091727edf5753d501473044022040263f7a31245a7e2ff8fdd0a3ed6b72e9c5936a15945c5e459b2e246919eec0022028da4cf53d103bae9e2652a1289aefae3858bbb6f3a799af51e6e2ee55a5f4aa0169522103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93a21028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced721032ad0edc9ca87bc02f8ca5acb209d47913fa6a7d45133b3d4a16354a75421e32e53ae00000000
+17:42:56 - Alice - Publish successfull... Contract execution success!
+17:43:01 - Alice - Shutting Down

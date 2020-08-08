@@ -44,8 +44,10 @@ object Setup {
                              "Arbiter"withInfo (c_pub, "127.0.0.1", 25002))
 
     // Creating chunks and entries for transactions
+    //this public chunk is gonna be on index 0 and is gonna contain Alice's signature
     val t_chunks = manager createPublicChunk a_pub
 
+    //this chunks have to be authorized by Alice and Bob and they are gonna contain their signatures for "T"
     val t1_alice_chunks = manager prepareEntry (manager createAuthChunk(a_pub onIndex 1),
                                                 manager createAuthChunk(b_pub onIndex 2))
 
@@ -64,7 +66,8 @@ object Setup {
     val t1_c_split_bob_chunks = manager prepareEntry (manager createAuthChunk(b_pub onIndex 1),
                                                       manager createAuthChunk(c_pub onIndex 2))
 
-    // Linking amounts to entries
+    // Linking amounts to entries, every bitcoin amount has to be linked to the signatures in order to make the right signatures
+    // This is necessary since a recent BIP (Bitcoin Improvement Proposal) makes difficult in segwit transactions to just take the bitcoin amount from previous tx
     val t_entry = manager createEntry ((1 btc) forChunks t_chunks)
     val t1_alice_entry = manager createEntry ((0.99 btc) forChunks t1_alice_chunks)
     val t1_bob_entry = manager createEntry ((0.99 btc) forChunks t1_bob_chunks)
@@ -73,7 +76,7 @@ object Setup {
     val t1_c_split_alice_entry = manager createEntry ((0.99 btc) forChunks t1_c_split_alice_chunks)
     val t1_c_split_bob_entry = manager createEntry ((0.99 btc) forChunks  t1_c_split_bob_chunks)
 
-    // Add the metadata of the transactions
+    // Add the metadata of the transactions, for every raw transaction previously added we save the metadata we just created
     manager addMetas ("T" withEntry t_entry,
                       "T1_bob" withEntry t1_bob_entry,
                       "T1_alice" withEntry t1_alice_entry,

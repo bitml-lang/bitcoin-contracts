@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Managers.ClientManager
+import Managers.{ClientManager, Helpers}
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -20,6 +20,7 @@ import scala.concurrent.Await
 
 class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
   private var testSystem: ActorSystem = _
+  val GUARD = false
 
   override def beforeAll(): Unit = {
     testSystem = ActorSystem(name = "internalTestSystemBob")
@@ -33,7 +34,10 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
   }
 
   test("Bob") {
+    val log = Helpers.CustomLogger("Bob")
+
     // get the initial state from the setup function
+    log.printStatus("Contract started - Executing Setup")
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
@@ -41,6 +45,7 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val cm = ClientManager()
 
     // creating akka actor
+    log.printStatus("Actor System Creation!")
     val contract = cm.createActor(testSystem, "Bob")
 
     // private and public key
@@ -48,19 +53,26 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val b_pub = PublicKey(ByteVector.fromValidHex("028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced7"))
 
     // fetch the partecipant db from the initial state
+    log.printStatus("Fetching contract partecipants from Setup")
     val bob_p = initialState.partdb.fetch(b_pub.toString()).get
 
     // Initialize Alice with the state information.
+    log.printStatus("Contract initiated with private key and initial state")
     contract ! Init(b_priv, stateJson)
 
     // Start network interface.
+    log.printStatus("Starting newtork interface - Listening incoming traffic on port "+ bob_p.endpoint.port.get)
     contract ! Listen("test_application_b.conf", bob_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout: Timeout = Timeout(2000 milliseconds)
 
-    if(false) {
+    log.printStatus("Checking if Bob should authorize Alice to access signature for T1_alice")
+    if(GUARD) {
+      log.printStatus("Authorizing signature for T1_alice")
       contract ! Authorize("T1_alice")
+    } else {
+      log.printStatus("Signature for T1_alice not authorized")
     }
 
     var published = false
@@ -68,28 +80,46 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     
     // Bob should keep trying to publish the transaction until he receives Oracle's signature
     while (!published && tries < 5) {
+      log.printStatus("Try number: "+ tries)
+
       // Ask for signature
+      log.printStatus("Asking signature for transaction T1_bob")
       contract ! AskForSigs("T1_bob")
       // Try to assemble the transaction and publish it
+      log.printStatus("Trying to assemble and publish transaction T1_bob")
       var future = contract ? TryAssemble("T1_bob", autoPublish = true)
       var res = cm.getResult(future)
+      if (!res.isEmpty()) log.printStatus("Assembled T1_bob with raw "+ res)
       published = cm.isPublished(res)
+      if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
 
-      contract ! AskForSigs("T1_C_bob")
-      future = contract ? TryAssemble("T1_C_bob", autoPublish = true)
-      res = cm.getResult(future)
-      published = cm.isPublished(res)
+      if(!published) {
+        log.printStatus("Asking signature for transaction T1_C_bob")
+        contract ! AskForSigs("T1_C_bob")
+        log.printStatus("Trying to assemble and publish transaction T1_C_bob")
+        future = contract ? TryAssemble("T1_C_bob", autoPublish = true)
+        res = cm.getResult(future)
+        if (!res.isEmpty()) log.printStatus("Assembled T1_C_bob with raw "+ res)
+        published = cm.isPublished(res)
+        if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
+      }
 
-      contract ! AskForSigs("T1_C_split_bob")
-      contract ? TryAssemble("T1_C_split_bob", autoPublish = true)
-      res = cm.getResult(future)
-      published = cm.isPublished(res)
-
+      if(!published) {
+        log.printStatus("Asking signature for transaction T1_C_split_bob")
+        contract ! AskForSigs("T1_C_split_bob")
+        log.printStatus("Trying to assemble and publish transaction T1_C_split_bob")
+        future = contract ? TryAssemble("T1_C_split_bob", autoPublish = true)
+        res = cm.getResult(future)
+        if (!res.isEmpty()) log.printStatus("Assembled T1_C_split_bob with raw "+ res)
+        published = cm.isPublished(res)
+        if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
+      }
       tries+=1
       Thread.sleep(5000)
     }
-
+    if (tries == 4) log.printStatus("Max number of tries reached! Terminating contract!")
     // final partecipant shutdown
+    log.printStatus("Shutting Down")
     contract ! StopListening()
     cm.shutSystem(testSystem)
   }

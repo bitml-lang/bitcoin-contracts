@@ -1,0 +1,9 @@
+17:42:50 - Arbiter - Contract started - Executing Setup
+17:42:51 - Arbiter - Actor System Creation!
+17:42:51 - Arbiter - Fetching contract partecipants from Setup
+17:42:51 - Arbiter - Contract initiated with private key and initial state
+17:42:51 - Arbiter - Starting newtork interface - Listening incoming traffic on port 25002
+17:42:51 - Arbiter - Checking which transaction should be authorized
+17:42:51 - Arbiter - Authorizing T1_C_split_alice
+17:42:51 - Arbiter - Authorizing T1_C_split_bob
+17:42:51 - Arbiter - Waiting 20 seconds before shut down

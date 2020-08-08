@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Managers.ClientManager
+import Managers.{ClientManager, Helpers}
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -21,6 +21,7 @@ import scala.concurrent.Await
 class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
 
   private var testSystem: ActorSystem = _
+  val GUARD = false
 
   override def beforeAll(): Unit = {
     testSystem = ActorSystem(name = "internalTestSystemAlice")
@@ -33,21 +34,11 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     super.afterAll()
   }
 
-  /*
-  participant Alice {
-    // Alice's private key
-    private const kA = key:cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDSy59L4
-    // Alice's public key
-    const kApub = kA.toPubkey
-
-    transaction T {
-        input = A_funds: sig(kA)
-        output = 1 BTC: fun(sigB, sigO). versig(Bob.kBpub, Oracle.kOpub; sigB, sigO)
-    }
-}
-   */
   test("Alice") {
+    val log = Helpers.CustomLogger("Alice")
+
     //get the initial state from the setup function
+    log.printStatus("Contract started - Executing Setup")
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
 
@@ -55,6 +46,7 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     //creating akka actor
+    log.printStatus("Actor System Creation!")
     val contract = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
@@ -63,12 +55,15 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val a_pub = a_priv.publicKey
 
     //fetch the partecipant db from the initial state
+    log.printStatus("Fetching contract partecipants from Setup")
     val alice_p = initialState.partdb.fetch(a_pub.toString()).get
 
     // Initialize Alice with the state information.
+    log.printStatus("Contract initiated with private key and initial state")
     contract ! Init(a_priv, stateJson)
 
     // Start network interface.
+    log.printStatus("Starting newtork interface - Listening incoming traffic on port "+ alice_p.endpoint.port.get)
     contract ! Listen("test_application.conf", alice_p.endpoint.system)
 
     //we declare an arbitrary timeout
@@ -78,37 +73,62 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     var tries = 0
 
     //contract tries to assemble T and also publish it in the testnet
+    log.printStatus("Trying to assemble and publish transaction T")
     var future = contract ? TryAssemble("T", autoPublish = true)
     var res = cm.getResult(future)
+    if (!res.isEmpty()) log.printStatus("Assembled T with raw "+ res)
     published = cm.isPublished(res)
+    if (published) log.printStatus("Publish successfull") else log.printStatus("Publish failed")
+    published = false
 
-    if(false) {
+    log.printStatus("Checking if Alice should authorize Bob to access signature for T1_bob")
+    if(GUARD) {
+      log.printStatus("Authorizing signature for T1_bob")
       contract ! Authorize("T1_bob")
+    } else {
+      log.printStatus("Signature for T1_bob not authorized")
     }
 
     while(!published && tries < 5) {
+      log.printStatus("Try number: "+ tries)
       // Ask for signature
+      log.printStatus("Asking signature for transaction T1_alice")
       contract ! AskForSigs("T1_alice")
       // Try to assemble the transaction and publish it
+      log.printStatus("Trying to assemble and publish transaction T1_alice")
       future = contract ? TryAssemble("T1_alice", autoPublish = true)
       res = cm.getResult(future)
+      if (!res.isEmpty()) log.printStatus("Assembled T1_alice with raw "+ res)
       published = cm.isPublished(res)
+      if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
 
-      contract ! AskForSigs("T1_C_alice")
-      future = contract ? TryAssemble("T1_C_alice", autoPublish = true)
-      res = cm.getResult(future)
-      published = cm.isPublished(res)
+      if(!published) {
+        log.printStatus("Asking signature for transaction T1_C_alice")
+        contract ! AskForSigs("T1_C_alice")
+        log.printStatus("Trying to assemble and publish transaction T1_C_alice")
+        future = contract ? TryAssemble("T1_C_alice", autoPublish = true)
+        res = cm.getResult(future)
+        if (!res.isEmpty()) log.printStatus("Assembled T1_C_alice with raw "+ res)
+        published = cm.isPublished(res)
+        if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
+      }
 
-      contract ! AskForSigs("T1_C_split_alice")
-      future = contract ? TryAssemble("T1_C_split_alice", autoPublish = true)
-      res = cm.getResult(future)
-      published = cm.isPublished(res)
-
+      if(!published) {
+        log.printStatus("Asking signature for transaction T1_C_split_alice")
+        contract ! AskForSigs("T1_C_split_alice")
+        log.printStatus("Trying to assemble and publish transaction T1_C_split_alice")
+        future = contract ? TryAssemble("T1_C_split_alice", autoPublish = true)
+        res = cm.getResult(future)
+        if (!res.isEmpty()) log.printStatus("Assembled T1_C_split_alice with raw "+ res)
+        published = cm.isPublished(res)
+        if (published) log.printStatus("Publish successfull... Contract execution success!") else log.printStatus("Publish failed")
+      }
       tries+=1
       Thread.sleep(5000)
     }
 
     // final partecipant shutdown
+    log.printStatus("Shutting Down")
     contract ! StopListening()
     cm.shutSystem(testSystem)
   }
