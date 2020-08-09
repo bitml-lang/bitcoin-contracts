@@ -1,0 +1,10 @@
+17:07:48 - Bob - Contract started - Executing Setup
+17:07:49 - Bob - Actor System Creation!
+17:07:49 - Bob - Contract initiated with private key and initial state
+17:07:49 - Bob - Starting newtork interface - Listening incoming traffic on port 25001
+17:07:49 - Bob - Trying to assemble and publish transaction T_timeout
+17:07:49 ERROR Client {xyz.bitml.api.Client assembleTx} - Failed to publish tx automatically ( bad-txns-inputs-missingorspent )
+17:07:49 - Bob - Assembled T_timeout with raw 0200000000010178e2a50f5b89d92d1b0cbd79169337c3ec1d392f7e9e7620715ca6773562e8b20000000000ffffffff01c0bc973b000000001600140b09d7a4d5ec473247d259d6e066b6596807619d034830450221008a00080343b2e2d73701dec95d6e818863f59649763ca8da10c3610ddb6ed56a022005885c5904b089e9950000eb662c6e89faf77605d1710c77a63e54b53c39fc8c01010082766b7c6ba82073475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a804987636c766b2103fd3c8b7437f9c8b447a3d04aca9ffa04c430c324a49495f13d116395029aa93aac6700686351670480bb1d5bb1756c766b21028c96545ee165f631de2889ac3dd21bdf96efc7b9b92accc36c2107460c72ced7ac6800000000
+17:07:49 - Bob - Publish failed... Checking if t_reveal was published
+17:07:49 - Bob - T_reveal was published! Contract executed succesfully!
+17:07:49 - Bob - Shutting Down

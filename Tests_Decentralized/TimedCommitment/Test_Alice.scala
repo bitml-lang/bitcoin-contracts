@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Managers.ClientManager
+import Managers.{ClientManager, Helpers}
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -47,6 +47,9 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
 }
    */
   test("Alice") {
+    val log = Helpers.CustomLogger("Alice")
+
+    log.printStatus("Contract started - Executing Setup")
     //get the initial state from the setup function
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
@@ -55,7 +58,8 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val cm = ClientManager()
 
     // Create actor
-    val alice = cm.createActor(testSystem, "Alice")
+    log.printStatus("Actor System Creation!")
+    val contract = cm.createActor(testSystem, "Alice")
 
     //private and public key of the partecipant
     val a_priv = PrivateKey.fromBase58("cVbFzgZSpnuKvNT5Z3DofF9dV4Dr1zFQJw9apGZDVaG73ULqM7XS", Base58.Prefix.SecretKeyTestnet)._1
@@ -65,36 +69,37 @@ class Test_Alice extends AnyFunSuite with BeforeAndAfterAll {
     val alice_p = initialState.partdb.fetch(a_pub.toString()).get
 
     // Initialize Alice with the state information.
-    alice ! Init(a_priv, stateJson)
+    log.printStatus("Contract initiated with private key and initial state")
+    contract ! Init(a_priv, stateJson)
 
     // Start network interface.
-    alice ! Listen("test_application.conf", alice_p.endpoint.system)
+    log.printStatus("Starting newtork interface - Listening incoming traffic on port "+ alice_p.endpoint.port.get)
+    contract ! Listen("test_application.conf", alice_p.endpoint.system)
 
     //we declare an arbitrary timeout
     implicit val timeout : Timeout = Timeout(2000 milliseconds)
 
     //alice tries to assemble T and also publish it in the testnet
-    val future = alice ? TryAssemble("alice_T_commit", autoPublish = true)
+    log.printStatus("Trying to assemble and publish transaction T_commit")
+    var future = contract ? TryAssemble("alice_T_commit", autoPublish = true)
 
     //alice has produced a transaction
-    val res = cm.getResult(future)
-
-    //print the serialized transaction
-    val tx = Transaction.read(res)
-    println(tx)
+    var res = cm.getResult(future)
+    log.printStatus("Assembled T_commit with raw " + res)
+    if (cm.isPublished(res)) log.printStatus("Publish successfull") else log.printStatus("Publish failed")
 
     //alice tries to assemble T and also publish it in the testnet
-    val future2 = alice ? TryAssemble("alice_T_reveal", autoPublish = true)
+    log.printStatus("Trying to assemble and publish transaction T_reveal")
+    future = contract ? TryAssemble("alice_T_reveal", autoPublish = true)
 
     //alice has produced a transaction
-    val res2 = cm.getResult(future2)
-
-    //print the serialized transaction
-    val tx2 = Transaction.read(res2)
-    println(tx2)
+    res = cm.getResult(future)
+    log.printStatus("Assembled T_reveal with raw " + res)
+    if (cm.isPublished(res)) log.printStatus("Publish successfull... Contract executed succesfully") else log.printStatus("Publish failed")
 
     // final partecipant shutdown
-    alice ! StopListening()
+    log.printStatus("Shutting Down")
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 }

@@ -1,6 +1,6 @@
 package Tests_Decentralized
 
-import Managers.ClientManager
+import Managers.{ClientManager, Helpers}
 import akka.actor.{ActorSystem, Address, CoordinatedShutdown, Props}
 import akka.util.Timeout
 import fr.acinq.bitcoin.Crypto.{PrivateKey, PublicKey}
@@ -33,6 +33,9 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
   }
 
   test("Bob") {
+    val log = Helpers.CustomLogger("Bob")
+
+    log.printStatus("Contract started - Executing Setup")
     // get the initial state from the setup function
     val initialState = Setup.setup()
     val stateJson = new Serializer().prettyPrintState(initialState)
@@ -41,7 +44,8 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val cm = ClientManager()
 
     // Create actor
-    val bob = cm.createActor(testSystem, "Bob")
+    log.printStatus("Actor System Creation!")
+    val contract = cm.createActor(testSystem, "Bob")
 
     // private and public key
     val b_priv = PrivateKey.fromBase58("cPU3AmQFsBxvrBgTWc1j3pS6T7m4bYWMFQyPnR9Qp3o3UTCBwspZ", Base58.Prefix.SecretKeyTestnet)._1
@@ -51,24 +55,34 @@ class Test_Bob  extends AnyFunSuite with BeforeAndAfterAll  {
     val bob_p = initialState.partdb.fetch(b_pub.toString()).get
 
     // Initialize Alice with the state information.
-    bob ! Init(b_priv, stateJson)
+    log.printStatus("Contract initiated with private key and initial state")
+    contract ! Init(b_priv, stateJson)
 
     // Start network interface.
-    bob ! Listen("test_application_b.conf", bob_p.endpoint.system)
+    log.printStatus("Starting newtork interface - Listening incoming traffic on port "+ bob_p.endpoint.port.get)
+    contract ! Listen("test_application_b.conf", bob_p.endpoint.system)
 
     // we declare an arbitrary timeout
     implicit val timeout: Timeout = Timeout(2000 milliseconds)
 
-    val future = bob ? TryAssemble("bob_T_timeout", autoPublish = true)
+    log.printStatus("Trying to assemble and publish transaction T_timeout")
+    val future = contract ? TryAssemble("bob_T_timeout", autoPublish = true)
 
     //alice has produced a transaction
     val res = cm.getResult(future)
+    log.printStatus("Assembled T_timeout with raw " + res)
 
-    //print the serialized transaction
-    val tx = Transaction.read(res)
-    println(tx)
+    if (cm.isPublished(res)) {
+      log.printStatus("Publish successfull... Contract executed succesfully")
+    } else {
+      log.printStatus("Publish failed... Checking if t_reveal was published")
+      val future = contract ? SearchTx("alice_T_reveal")
+      val res = cm.getResult(future)
+      if(res.isEmpty) log.printStatus("T_reveal was not published! Contract failed!") else log.printStatus("T_reveal was published! Contract executed succesfully!")
+    }
 
-    bob ! StopListening()
+    log.printStatus("Shutting Down")
+    contract ! StopListening()
     cm.shutSystem(testSystem)
   }
 
